@@ -14,4 +14,32 @@
             </div>
         </div>
     </div>
+
+
+    <div class="flex items-center space-x-6">
+        <!-- Profile Image -->
+        <div>
+            @if($user->profile_image)
+                <img 
+                    src="{{ asset('storage/profile_images/' . $user->profile_image) }}" 
+                    alt="{{ $user->name }}" 
+                    
+                >
+            @else
+                <img 
+                    src="{{ asset('images/default-profile.png') }}" 
+                    alt="Default Profile" 
+                    
+                >
+            @endif
+        </div>
+
+        <!-- User Details -->
+        <div>
+            <h1 class="text-xl font-bold">{{ $user->name }}</h1>
+            <p class="text-gray-600">{{ $user->email }}</p>
+        </div>
+    </div>
+
+
 </x-app-layout>
