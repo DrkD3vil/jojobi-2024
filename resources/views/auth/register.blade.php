@@ -5,25 +5,38 @@
         <!-- Name -->
         <div>
             <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required
+                autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
         <div class="mt-4">
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')"
+                required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
+        <!-- Phone Number -->
+        <div class="mt-4">
+            <x-input-label for="phone" :value="__('Phone Number')" />
+            <div class="flex items-center">
+                <!-- Fixed prefix -->
+                <span class="px-4 py-2 bg-gray-200 border border-r-0 rounded-l-md">880</span>
+                <!-- Number input -->
+                <x-text-input id="phone" class="block w-full border-l-0 rounded-r-md" type="text" name="phone"
+                    :value="old('phone')" required placeholder="e.g., 1234567890" />
+            </div>
+            <small class="text-gray-600">Enter the rest of the phone number (11 digits).</small>
+            <x-input-error :messages="$errors->get('phone')" class="mt-2" />
+        </div>
         <!-- Password -->
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required
+                autocomplete="new-password" />
 
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
@@ -32,15 +45,15 @@
         <div class="mt-4">
             <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
 
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
+            <x-text-input id="password_confirmation" class="block mt-1 w-full" type="password"
+                name="password_confirmation" required autocomplete="new-password" />
 
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">
+            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+                href="{{ route('login') }}">
                 {{ __('Already registered?') }}
             </a>
 

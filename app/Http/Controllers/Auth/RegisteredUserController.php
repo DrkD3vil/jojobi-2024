@@ -23,28 +23,33 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
-    public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+ * Handle an incoming registration request.
+ *
+ * @throws \Illuminate\Validation\ValidationException
+ */
+public function store(Request $request): RedirectResponse
+{
+    $validatedData = $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+        'phone' => ['required', 'string', 'regex:/^(01\d{9})$/'], // Ensure the user inputs 11 digits starting with '01'
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+    ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+    // Process the phone number to ensure the format is 880 followed by the number without extra 0s
+    $processedPhone = '880' . ltrim($validatedData['phone'], '0');
 
-        event(new Registered($user));
+    $user = User::create([
+        'name' => $validatedData['name'],
+        'email' => $validatedData['email'],
+        'phone' => $processedPhone,
+        'password' => Hash::make($validatedData['password']),
+    ]);
 
-        Auth::login($user);
+    event(new Registered($user));
 
-        return redirect(route('dashboard', absolute: false));
-    }
+    Auth::login($user);
+
+    return redirect()->route('dashboard');
+}
 }
