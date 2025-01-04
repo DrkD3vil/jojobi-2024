@@ -27,7 +27,7 @@ Route::prefix('auth')->name('auth.')->controller(SocialiteController::class)->gr
 
 Route::get('/dashboard', function () {
     $user = Auth::user(); // Get the authenticated user
-    return view('dashboard', compact('user')); // Pass user data to the view
+    return view('adminBackend.adminLayout', compact('user')); // Pass user data to the view
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
