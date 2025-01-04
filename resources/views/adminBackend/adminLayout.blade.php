@@ -23,6 +23,7 @@
                                         <!-- Content -->
 
                                         <div class="container-xxl flex-grow-1 container-p-y">
+                                            @include('adminBackend.content')
                                         </div>
 
                     @include('adminBackend.components.footer')

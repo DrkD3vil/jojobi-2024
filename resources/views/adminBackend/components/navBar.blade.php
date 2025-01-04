@@ -48,8 +48,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <h6 class="mb-0 small">John Doe</h6>
-                                                    <small class="text-muted">Admin</small>
+                                                    <h6 class="mb-0 small">{{ $user->name }}</h6>
+                                                    <small class="text-muted">{{ $user->role }}</small>
                                                 </div>
                                             </div>
                                         </a>

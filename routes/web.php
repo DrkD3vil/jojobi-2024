@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SocialiteController;
 use Illuminate\Support\Facades\Auth;
@@ -25,10 +26,15 @@ Route::prefix('auth')->name('auth.')->controller(SocialiteController::class)->gr
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/dashboard', function () {
-    $user = Auth::user(); // Get the authenticated user
-    return view('adminBackend.adminLayout', compact('user')); // Pass user data to the view
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     $user = Auth::user(); // Get the authenticated user
+//     return view('adminBackend.adminLayout', compact('user')); // Pass user data to the view
+// })->middleware(['auth', 'verified'])->name('dashboard');
+
+// Dashboard routes
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
