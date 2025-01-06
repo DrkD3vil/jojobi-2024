@@ -48,37 +48,37 @@
 
     <ul class="menu-inner py-1">
         <!-- Dashboards -->
-        <li class="menu-item {{ Request::is('dashboards*') ? 'active open' : '' }}">
+        <li class="menu-item <?php echo e(Request::is('dashboards*') ? 'active open' : ''); ?>">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons ri-home-smile-line"></i>
                 <div data-i18n="Dashboards">Dashboards</div>
                 <div class="badge bg-danger rounded-pill ms-auto">5</div>
             </a>
             <ul class="menu-sub">
-                <li class="menu-item {{ Request::is('dashboards/crm') ? 'active' : '' }}">
+                <li class="menu-item <?php echo e(Request::is('dashboards/crm') ? 'active' : ''); ?>">
                     <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/dashboards-crm.html" target="_blank" class="menu-link">
                         <div data-i18n="CRM">CRM</div>
                         <div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
                     </a>
                 </li>
-                <li class="menu-item {{ Request::is('dashboards/analytics') ? 'active' : '' }}">
+                <li class="menu-item <?php echo e(Request::is('dashboards/analytics') ? 'active' : ''); ?>">
                     <a href="index.html" class="menu-link">
                         <div data-i18n="Analytics">Analytics</div>
                     </a>
                 </li>
-                <li class="menu-item {{ Request::is('dashboards/ecommerce') ? 'active' : '' }}">
+                <li class="menu-item <?php echo e(Request::is('dashboards/ecommerce') ? 'active' : ''); ?>">
                     <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/app-ecommerce-dashboard.html" target="_blank" class="menu-link">
                         <div data-i18n="eCommerce">eCommerce</div>
                         <div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
                     </a>
                 </li>
-                <li class="menu-item {{ Request::is('dashboards/logistics') ? 'active' : '' }}">
+                <li class="menu-item <?php echo e(Request::is('dashboards/logistics') ? 'active' : ''); ?>">
                     <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/app-logistics-dashboard.html" target="_blank" class="menu-link">
                         <div data-i18n="Logistics">Logistics</div>
                         <div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
                     </a>
                 </li>
-                <li class="menu-item {{ Request::is('dashboards/academy') ? 'active' : '' }}">
+                <li class="menu-item <?php echo e(Request::is('dashboards/academy') ? 'active' : ''); ?>">
                     <a href="https://demos.themeselection.com/materio-bootstrap-html-admin-template/html/vertical-menu-template/app-academy-dashboard.html" target="_blank" class="menu-link">
                         <div data-i18n="Academy">Academy</div>
                         <div class="badge bg-label-primary fs-tiny rounded-pill ms-auto">Pro</div>
@@ -88,29 +88,29 @@
         </li>
     
         <!-- Category -->
-        <li class="menu-item {{ Request::is('category') ? 'active open' : '' }}">
+        <li class="menu-item <?php echo e(Request::is('category') ? 'active open' : ''); ?>">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons ri-layout-2-line"></i>
                 <div data-i18n="Category">Category</div>
                 <i class="dropdown-toggle-icon"></i> <!-- Dropdown Icon -->
             </a>
             <ul class="menu-sub">
-                <li class="menu-item {{ Request::is('category') ? 'active' : '' }}">
-                    <a href="{{ route('category') }}" class="menu-link">
+                <li class="menu-item <?php echo e(Request::is('category') ? 'active' : ''); ?>">
+                    <a href="<?php echo e(route('category')); ?>" class="menu-link">
                         <div data-i18n="Without menu">Categories</div>
                     </a>
                 </li>
-                <li class="menu-item {{ Request::is('layouts-container') ? 'active' : '' }}">
+                <li class="menu-item <?php echo e(Request::is('layouts-container') ? 'active' : ''); ?>">
                     <a href="layouts-container.html" class="menu-link">
                         <div data-i18n="Container">Container</div>
                     </a>
                 </li>
-                <li class="menu-item {{ Request::is('layouts-fluid') ? 'active' : '' }}">
+                <li class="menu-item <?php echo e(Request::is('layouts-fluid') ? 'active' : ''); ?>">
                     <a href="layouts-fluid.html" class="menu-link">
                         <div data-i18n="Fluid">Fluid</div>
                     </a>
                 </li>
-                <li class="menu-item {{ Request::is('layouts-blank') ? 'active' : '' }}">
+                <li class="menu-item <?php echo e(Request::is('layouts-blank') ? 'active' : ''); ?>">
                     <a href="layouts-blank.html" class="menu-link">
                         <div data-i18n="Blank">Blank</div>
                     </a>
@@ -230,4 +230,4 @@
     </ul>
     
 </aside>
-<!-- / Menu -->
+<!-- / Menu --><?php /**PATH E:\Bijoy Dey\Laravel\jojobi\resources\views/adminBackend/components/sidebar.blade.php ENDPATH**/ ?>
