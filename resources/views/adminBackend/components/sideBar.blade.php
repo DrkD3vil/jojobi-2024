@@ -142,8 +142,41 @@
             </li>
             
             <li class="menu-item {{ Request::is('layouts-blank') ? 'active' : '' }}">
-                <a href="layouts-blank.html" class="menu-link">
-                    <div data-i18n="Blank">Blank</div>
+                <a href="{{ route('pos.index') }}" class="menu-link">
+                    <div data-i18n="Blank">POS</div>
+                </a>
+            </li>
+        </ul>
+    </li>
+
+
+    <!-- POS -->
+    <li class="menu-item {{ Request::is('pos') ? 'active open' : '' }}">
+        <a href="javascript:void(0);" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons ri-layout-2-line"></i>
+            <div data-i18n="Category">POS</div>
+            <i class="dropdown-toggle-icon"></i> <!-- Dropdown Icon -->
+        </a>
+        <ul class="menu-sub">
+            <li class="menu-item {{ Request::is('pos') ? 'active' : '' }}">
+                <a href="{{ route('pos.index') }}" class="menu-link">
+                    <div data-i18n="Without menu">POS</div>
+                </a>
+            </li>
+            <li class="menu-item {{ Request::is('layouts-container') ? 'active' : '' }}">
+                <a href="{{ route('products.index')}}" class="menu-link">
+                    <div data-i18n="Container">View All Product</div>
+                </a>
+            </li>
+            <li class="menu-item {{ Request::is('layouts-fluid') ? 'active' : '' }}">
+                <a href="{{ route('products.preview-pdf') }}" class="menu-link">
+                    <div data-i18n="Fluid">Products PDF</div>
+                </a>
+            </li>
+            
+            <li class="menu-item {{ Request::is('layouts-blank') ? 'active' : '' }}">
+                <a href="{{ route('pos.index') }}" class="menu-link">
+                    <div data-i18n="Blank">POS</div>
                 </a>
             </li>
         </ul>
