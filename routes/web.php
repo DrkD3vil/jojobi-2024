@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SocialiteController;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,7 @@ Route::get('/', function () {
 // });
 
 
-Route::prefix('auth')->name('auth.')->controller(SocialiteController::class)->group(function() {
+Route::prefix('auth')->name('auth.')->controller(SocialiteController::class)->group(function () {
     Route::get('google', 'googleLogin')->name('google');
     Route::get('google-callback', 'googleAuthentication')->name('google-callback');
 });
@@ -37,6 +38,7 @@ Route::get('/dashboard', function () {
 //     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 // });
 
+// Category routes
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('view_category', [CategoryController::class, 'view_category'])->name('category');
     Route::post('add_category', [CategoryController::class, 'add_category'])->name('add_category');
@@ -47,9 +49,38 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('preview-pdf', [CategoryController::class, 'previewCategoriesPDF'])->name('category.preview-pdf');
     Route::get('download-pdf', [CategoryController::class, 'downloadCategoriesPDF'])->name('category.download-pdf');
     Route::get('singleView_category/{uuid}', [CategoryController::class, 'singleView_category'])->name('category.singleView');
-
 });
 
+// Products Routes
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('products/{uuid}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::post('products/{uuid}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('products/{uuid}', [ProductController::class, 'destroy'])->name('products.delete');
+    Route::get('products/view/{uuid}', [ProductController::class, 'show'])->name('products.show');
+    Route::get('products/preview-pdf', [ProductController::class, 'previewProductsPDF'])->name('products.preview-pdf');
+    Route::get('products/export', [ProductController::class, 'exportToExcel'])->name('products.export');
+    Route::post('products/import', [ProductController::class, 'importFromExcel'])->name('products.import');
+
+    Route::get('products/import-format', [ProductController::class, 'downloadImportFormat'])->name('products.import-format');
+
+
+
+
+
+
+
+    // Route::get('products/search', [ProductController::class,'search'])->name('products.search');
+    // Route::get('products/csv', [ProductController::class, 'generateCSV'])->name('products.csv');
+    // Route::get('products/export', [ProductController::class, 'exportToExcel'])->name('products.export');
+    // Route::get('products/import', [ProductController::class, 'importFromExcel'])->name('products.import');
+    // Route::get('products/view-pdf/{uuid}', [ProductController::class, 'viewPDF'])->name('products.view-pdf');
+
+
+
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -57,4 +88,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

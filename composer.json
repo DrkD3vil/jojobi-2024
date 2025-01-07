@@ -14,7 +14,9 @@
         "laravel/framework": "^11.31",
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^2.9",
-        "picqer/php-barcode-generator": "^3.2"
+        "maatwebsite/excel": "^3.1",
+        "picqer/php-barcode-generator": "^3.2",
+        "yajra/laravel-datatables-oracle": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

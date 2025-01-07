@@ -117,7 +117,38 @@
                 </li>
             </ul>
         </li>
-    
+     <!-- Product -->
+     <li class="menu-item <?php echo e(Request::is('products') ? 'active open' : ''); ?>">
+        <a href="javascript:void(0);" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons ri-layout-2-line"></i>
+            <div data-i18n="Category">Product</div>
+            <i class="dropdown-toggle-icon"></i> <!-- Dropdown Icon -->
+        </a>
+        <ul class="menu-sub">
+            <li class="menu-item <?php echo e(Request::is('products') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('products.create')); ?>" class="menu-link">
+                    <div data-i18n="Without menu">Add Product</div>
+                </a>
+            </li>
+            <li class="menu-item <?php echo e(Request::is('layouts-container') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('products.index')); ?>" class="menu-link">
+                    <div data-i18n="Container">View All Product</div>
+                </a>
+            </li>
+            <li class="menu-item <?php echo e(Request::is('layouts-fluid') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('products.preview-pdf')); ?>" class="menu-link">
+                    <div data-i18n="Fluid">Products PDF</div>
+                </a>
+            </li>
+            
+            <li class="menu-item <?php echo e(Request::is('layouts-blank') ? 'active' : ''); ?>">
+                <a href="layouts-blank.html" class="menu-link">
+                    <div data-i18n="Blank">Blank</div>
+                </a>
+            </li>
+        </ul>
+    </li>
+
         <!-- Front Pages -->
         <li class="menu-item">
             <a href="javascript:void(0);" class="menu-link menu-toggle">

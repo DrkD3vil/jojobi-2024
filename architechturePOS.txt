@@ -1,0 +1,39 @@
++-------------------------------------+
+|             User Interface          |  
+|  (Web or Mobile Application)        |
+|   - Product List                    |
+|   - Cart Management                 |
+|   - Payment Gateway                 |
+|   - Transaction History             |
++-------------------------------------+
+               |
+               v
++-------------------------------------+
+|           Application Server        | 
+|   (Handles business logic, routes, |
+|    and communication between UI and|
+|    the database)                   |
++-------------------------------------+
+               |
+               v
++-------------------------------------+
+|             Database               |
+|   (Stores product details,         |
+|    transaction logs, user data,    |
+|    inventory, etc.)                |
+|    - Products                      |
+|    - Transactions                  |
+|    - Users                         |
+|    - Payments                      |
+|    - Inventory                     |
++-------------------------------------+
+               |
+               v
++-------------------------------------+
+|       External Integrations        |
+|   - Payment Gateways (e.g., Stripe,|
+|     PayPal, etc.)                  |
+|   - Barcode Scanners               |
+|   - Printer (Receipt Printer)      |
+|   - Inventory Management Systems   |
++-------------------------------------+
