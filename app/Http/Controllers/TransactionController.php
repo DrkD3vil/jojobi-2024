@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\Product;
@@ -14,76 +15,41 @@ class TransactionController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
-        // Fetch products and other necessary data
-        $products = Product::all();
-        
-        return view('adminBackend.transactions.index', compact('products', 'user'));
+        $transactions = Transaction::with('order')->paginate(10);
+
+        return view('adminBackend.transactions.index', compact('transactions'));
     }
-    public function addProduct(Request $request)
+
+    public function create($orderId)
     {
-        // Validate input
+        $user = Auth::user();
+        $order = Order::findOrFail($orderId);
+
+        return view('adminBackend.transactions.create', compact('order', 'user'));
+    }
+
+    public function store(Request $request, $orderId)
+    {
+        $order = Order::findOrFail($orderId);
+
+        // Validate Request
         $request->validate([
-            'barcode' => 'required|string',
+            'payment_method' => 'required|string',
+            'amount_paid' => 'required|numeric|min:0',
         ]);
 
-        // Search product by barcode or name
-        $product = Product::where('product_barcode', $request->barcode)
-            ->orWhere('name', 'LIKE', '%' . $request->barcode . '%')
-            ->first();
+        // Create Transaction
+        Transaction::create([
+            'order_id' => $order->id,
+            'payment_method' => $request->payment_method,
+            'amount_paid' => $request->amount_paid,
+            'status' => 'completed', // Example status
+        ]);
 
-        if (!$product) {
-            return back()->with('error', 'Product not found.');
-        }
+        // Update Order Status
+        $order->update(['status' => 'completed']);
 
-        // Fetch the category details
-
-
-        // Store product details in the session (or database for ongoing transactions)
-        $cart = session()->get('cart', []);
-        $cart[$product->id] = [
-            'name' => $product->name,
-            'barcode' => $product->product_barcode,
-            'quantity' => isset($cart[$product->id]) ? $cart[$product->id]['quantity'] + 1 : 1,
-            'price' => $product->sell_price,
-            'category' => $product->category_id->category_name ?? 'N/A',
-            'image' => $product->image ?? 'default.jpg',
-        ];
-
-        session()->put('cart', $cart);
-
-        return back()->with('success', 'Product added successfully.');
-    }
-
-    public function removeProduct($id)
-    {
-        $cart = session()->get('cart', []);
-        if (isset($cart[$id])) {
-            unset($cart[$id]);
-            session()->put('cart', $cart);
-        }
-
-        return back()->with('success', 'Product removed successfully.');
-    }
-
-    public function clearCart()
-    {
-        session()->forget('cart');
-        return back()->with('success', 'Cart cleared successfully.');
-    }
-
-    public function checkout()
-    {
-        // Process the transaction
-        $cart = session()->get('cart', []);
-        if (empty($cart)) {
-            return back()->with('error', 'Cart is empty.');
-        }
-
-        // Save transaction logic (e.g., store in a database)
-
-        session()->forget('cart');
-        return back()->with('success', 'Transaction completed successfully.');
+        return redirect()->route('transactions.index')->with('success', 'Transaction completed successfully.');
     }
 }
 

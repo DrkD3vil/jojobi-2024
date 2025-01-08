@@ -163,9 +163,9 @@
                     <div data-i18n="Without menu">POS</div>
                 </a>
             </li>
-            <li class="menu-item <?php echo e(Request::is('layouts-container') ? 'active' : ''); ?>">
-                <a href="<?php echo e(route('products.index')); ?>" class="menu-link">
-                    <div data-i18n="Container">View All Product</div>
+            <li class="menu-item <?php echo e(Request::is('pos') ? 'active' : ''); ?>">
+                <a href="<?php echo e(route('orders.index')); ?>" class="menu-link">
+                    <div data-i18n="Container">View All Order</div>
                 </a>
             </li>
             <li class="menu-item <?php echo e(Request::is('layouts-fluid') ? 'active' : ''); ?>">

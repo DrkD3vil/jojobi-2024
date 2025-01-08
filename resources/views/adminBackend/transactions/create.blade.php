@@ -1,55 +1,32 @@
-{{-- @extends('adminBackend.adminLayout')
 
+@extends('adminBackend.adminLayout')
 
 @section('content')
-    <div class="container">
-        <h1>Create New Transaction</h1>
 
-        <form action="{{ route('transactions.store') }}" method="POST">
-            @csrf
-            <div class="form-group">
-                <label for="user_id">User</label>
-                <select name="user_id" class="form-control" required>
-                    @foreach ($users as $user)
-                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                    @endforeach
-                </select>
-            </div>
 
-            <div class="form-group mt-3">
-                <label for="products">Products</label>
-                <div id="product-fields">
-                    <div class="product-field">
-                        <select name="products[0][product_id]" class="form-control" required>
-                            @foreach ($products as $product)
-                                <option value="{{ $product->id }}">{{ $product->name }}</option>
-                            @endforeach
-                        </select>
-                        <input type="number" name="products[0][quantity]" class="form-control mt-2" placeholder="Quantity" required>
-                    </div>
-                </div>
-                <button type="button" id="add-product" class="btn btn-secondary mt-2">Add Product</button>
-            </div>
+<div class="container">
+    <h1>Transaction for Order #{{ $order->order_number }}</h1>
 
-            <button type="submit" class="btn btn-primary mt-3">Submit Transaction</button>
-        </form>
-    </div>
+    <form action="{{ route('transactions.store', $order->id) }}" method="POST">
+        @csrf
+        <div>
+            <label for="payment_method">Payment Method:</label>
+            <select name="payment_method" id="payment_method" required>
+                <option value="cash">Cash</option>
+                <option value="credit_card">Credit Card</option>
+                <option value="bank_transfer">Bank Transfer</option>
+            </select>
+        </div>
 
-    <script>
-        document.getElementById('add-product').addEventListener('click', function() {
-            const productFields = document.getElementById('product-fields');
-            const productCount = productFields.querySelectorAll('.product-field').length;
-            const newProductField = document.createElement('div');
-            newProductField.classList.add('product-field');
-            newProductField.innerHTML = `
-                <select name="products[${productCount}][product_id]" class="form-control" required>
-                    @foreach ($products as $product)
-                        <option value="{{ $product->id }}">{{ $product->name }}</option>
-                    @endforeach
-                </select>
-                <input type="number" name="products[${productCount}][quantity]" class="form-control mt-2" placeholder="Quantity" required>
-            `;
-            productFields.appendChild(newProductField);
-        });
-    </script>
-@endsection --}}
+        <div>
+            <label for="amount_paid">Amount Paid:</label>
+            <input type="number" name="amount_paid" id="amount_paid" required step="0.01" min="0"
+                   value="{{ $order->total_price }}">
+        </div>
+
+        <button type="submit" class="btn btn-success">Complete Transaction</button>
+    </form>
+
+    <a href="{{ route('orders.index') }}" class="btn btn-primary">Back to Orders</a>
+</div>
+@endsection
