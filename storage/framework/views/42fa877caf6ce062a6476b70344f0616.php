@@ -126,7 +126,7 @@
             </thead>
             <tbody>
                 <?php $subtotal = 0; ?>
-                <?php $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php $__currentLoopData = $cart; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <?php
                         $productTotal = $product['quantity'] * $product['price'];
                         $subtotal += $productTotal;

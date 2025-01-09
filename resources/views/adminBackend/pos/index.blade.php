@@ -1,7 +1,7 @@
 @extends('adminBackend.adminLayout')
 
 @section('content')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
         /* General Styling */
@@ -237,103 +237,70 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <!-- Add Product Form -->
-    <form action="{{ route('pos.add') }}" method="POST">
-        @csrf
-        <label for="barcode">Barcode or Product Name:</label>
-        <input type="text" id="barcode" name="barcode" placeholder="Enter Barcode/Product Name" required>
-        <button type="submit">Add Product</button>
-    </form>
+    {{-- Add New User --}}
 
-    <!-- Cart Table -->
-    <h2>Product Table</h2>
-    <form id="cartForm">
-        @csrf
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>Barcode</th>
-                    <th>Product Image</th>
-                    <th>Product Name</th>
-                    <th>Quantity</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php $subtotal_price = 0; @endphp
+ <!-- Add Product Form -->
+<form action="{{ route('pos.add') }}" method="POST">
+    @csrf
+    <label for="barcode">Barcode or Product Name:</label>
+    <input type="text" id="barcode" name="barcode" placeholder="Enter Barcode/Product Name" required>
+    <button type="submit">Add Product</button>
+</form>
 
-                @forelse(session('cart', []) as $id => $item)
-                    @php $subtotal_price += $item['quantity'] * $item['price']; @endphp
-
-                    <tr>
-                        <td>{{ $item['barcode'] }}</td>
-                        <td><img src="{{ asset('baackend_images/' . $item['image']) }}" alt="Product Image" width="50">
-                        </td>
-                        <td>{{ $item['name'] }}</td>
-                        <td>
-                            <input type="number" name="cart[{{ $id }}][quantity]" class="quantity-input"
-                                data-id="{{ $id }}" value="{{ $item['quantity'] }}" min="1"
-                                style="width: 60px;">
-                        </td>
-                        <td>{{ $item['category'] }}</td>
-                        <td>${{ number_format($item['price'], 2) }}</td>
-                        <td>
-                            <a href="{{ route('pos.remove', $id) }}">Remove</a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7">No products in the cart.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-            <tfoot>
+<!-- Cart Table -->
+<h2>Product Table</h2>
+<form action="{{ route('pos.update') }}" method="POST">
+    @csrf
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Barcode</th>
+                <th>Product Image</th>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $subtotal_price = 0; @endphp
+            @forelse(session('cart', []) as $id => $item)
+                @php $subtotal_price += $item['quantity'] * $item['price']; @endphp
                 <tr>
-                    <td colspan="5" style="text-align: right;">Subtotal Price:</td>
-                    <td id="subtotal">${{ number_format($subtotal_price, 2) }}</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="text-align: right;">Tax:</td>
+                    <td>{{ $item['barcode'] }}</td>
+                    <td><img src="{{ asset('baackend_images/' . $item['image']) }}" alt="Product Image" width="50"></td>
+                    <td>{{ $item['name'] }}</td>
                     <td>
-                        <input type="number" name="tax" id="tax" class="update-field" value="0"
-                            step="0.01" style="width: 80px;">%
+                        <input type="number" name="cart[{{ $id }}][quantity]" value="{{ $item['quantity'] }}" min="1" style="width: 60px;">
                     </td>
-                    <td></td>
+                    <td>{{ $item['category'] }}</td>
+                    <td>${{ number_format($item['price'], 2) }}</td>
+                    <td><a href="{{ route('pos.remove', $id) }}">Remove</a></td>
                 </tr>
+            @empty
                 <tr>
-                    <td colspan="5" style="text-align: right;">Shipping Cost:</td>
-                    <td>
-                        <input type="number" name="shipping_cost" id="shipping_cost" class="update-field" value="0"
-                            step="0.01" style="width: 80px;">
-                    </td>
-                    <td></td>
+                    <td colspan="7">No products in the cart.</td>
                 </tr>
-                <tr>
-                    <td colspan="5" style="text-align: right;">Discount:</td>
-                    <td>
-                        <input type="number" name="discount" id="discount" class="update-field" value="0"
-                            step="0.01" style="width: 80px;">
-                    </td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td colspan="5" style="text-align: right;">Total Price:</td>
-                    <td id="total_price">${{ number_format($subtotal_price, 2) }}</td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
-    </form>
+            @endforelse
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5" style="text-align: right;">Subtotal Price:</td>
+                <td id="subtotal">${{ number_format($subtotal_price, 2) }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    <button type="submit">Update Cart</button>
+</form>
+
+<form action="{{ route('cart.add') }}" method="POST" style="text-align:right;">
+    @csrf
+    <button type="submit">Proceed</button>
+</form>
 
 
-
-    <form action="{{ route('pos.checkout') }}" method="POST" style="text-align:right;">
-        @csrf
-        <button type="submit">Proceed</button>
-    </form>
 
     <script>
         // Function to update cart totals using AJAX
@@ -341,7 +308,7 @@
             let cartData = $('#cartForm').serialize(); // Collect form data
 
             $.ajax({
-                url: "{{ route('pos.updateCart') }}",
+                url: "",
                 method: "POST",
                 data: cartData,
                 success: function(response) {

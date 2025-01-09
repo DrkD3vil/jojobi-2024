@@ -2,193 +2,139 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\Product;
+use App\Models\Cart;
 use Illuminate\Http\Request;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
-use App\Services\CartService;
+use Illuminate\Support\Facades\Session;
 
 class PosController extends Controller
 {
-    //
-    public function index()
+    // Show the POS index page
+    public function showPos(Request $request)
     {
         $user = Auth::user();
-        // Fetch products and other necessary data
-        $products = Product::all();
-
-        return view('adminBackend.pos.index', compact('products', 'user'));
-    }
-    public function addProduct(Request $request)
-    {
-        // Validate input
-        $request->validate([
-            'barcode' => 'required|string',
-        ]);
-
-        // Search product by barcode or name
-        $product = Product::where('product_barcode', $request->barcode)
-            ->orWhere('name', 'LIKE', '%' . $request->barcode . '%')
-            ->first();
-
-        if (!$product) {
-            return back()->with('error', 'Product not found.');
+        // Get the cart from session or database if empty
+        $cart = session('cart', []);
+        if (empty($cart)) {
+            $cart_id = $request->session()->get('cart_id');
+            if ($cart_id) {
+                $cart_data = Cart::where('cart_id', $cart_id)->first();
+                if ($cart_data) {
+                    $cart = json_decode($cart_data->items, true);
+                }
+            }
         }
 
-        // Fetch the category details
+        // Calculate the subtotal price based on the cart data
+        $subtotal_price = 0;
+        foreach ($cart as $item) {
+            $subtotal_price += $item['quantity'] * $item['price'];
+        }
 
-
-        // Store product details in the session (or database for ongoing Orders)
-        $cart = session()->get('cart', []);
-        $cart[$product->id] = [
-            'name' => $product->name,
-            'barcode' => $product->product_barcode,
-            'quantity' => isset($cart[$product->id]) ? $cart[$product->id]['quantity'] + 1 : 1,
-            'price' => $product->sell_price,
-            'category' => $product->category_id->category_name ?? 'N/A',
-            'image' => $product->image ?? 'default.jpg',
-        ];
-
-        session()->put('cart', $cart);
-
-        return back()->with('success', 'Product added successfully.');
+        return view('adminBackend.pos.index', compact('cart', 'subtotal_price', 'user'));
     }
 
+    // Add product to the cart
+    public function addProduct(Request $request)
+    {
+        $barcode = $request->input('barcode');
+        $product = Product::where('product_barcode', $barcode)->orWhere('name', 'like', "%$barcode%")->first();
+
+        if (!$product) {
+            return redirect()->route('pos.index')->with('error', 'Product not found.');
+        }
+
+        // Retrieve the cart from the session
+        $cart = session()->get('cart', []);
+
+        // If the product is already in the cart, update the quantity
+        if (isset($cart[$product->id])) {
+            $cart[$product->id]['quantity']++;
+        } else {
+            // Add the product to the cart
+            $cart[$product->id] = [
+                'id' => $product->id,
+                'barcode' => $product->product_barcode,
+                'name' => $product->name,
+                'quantity' => 1,
+                'price' => $product->sell_price,
+                'category' => $product->category->name ?? 'N/A',
+                'image' => $product->image,
+            ];
+        }
+
+        // Store the cart in the session
+        session()->put('cart', $cart);
+        session()->put('cart_id', uniqid()); // Generate a unique cart_id for persistence
+
+        return redirect()->route('pos.index');
+    }
+
+    // Remove a product from the cart
     public function removeProduct($id)
     {
         $cart = session()->get('cart', []);
+
         if (isset($cart[$id])) {
             unset($cart[$id]);
             session()->put('cart', $cart);
         }
 
-        return back()->with('success', 'Product removed successfully.');
+        return redirect()->route('pos.index');
     }
 
-    public function clearCart()
+    // Store the cart in the database and clear session
+    public function storeCartInDatabase(Request $request)
     {
-        session()->forget('cart');
-        return back()->with('success', 'Cart cleared successfully.');
+        $cart = session()->get('cart', []);
+    
+        if (empty($cart)) {
+            return redirect()->route('pos.index')->with('error', 'Cart is empty!');
+        }
+    
+        // Generate a unique cart ID
+        $cart_id = uniqid();
+    
+        // Save the cart to the database as JSON
+        $cart_data = [
+            'cart_id' => $cart_id,  // Generate a unique cart ID
+            'uuid' => $request->uuid ?? null, // Optionally use a UUID for the user
+            'status' => 'waiting',  // Status could be 'waiting', 'pending', 'complete'
+            'items' => json_encode($cart), // Store the cart items as JSON
+            'subtotal_price' => array_sum(array_map(fn($item) => $item['quantity'] * $item['price'], $cart)), // Calculate the subtotal
+        ];
+    
+        // Store the cart in the database
+        Cart::create($cart_data);
+    
+        // Optionally clear the session cart after storing it
+        // session()->forget('cart');
+        // session()->forget('cart_id');
+    
+        // Redirect to orders.create with the cart_id
+        return redirect()->route('orders.create', ['cart_id' => $cart_id])->with('success', 'Cart stored and cleared!');
     }
+    
 
+    // Update the cart data (e.g., quantity)
     public function updateCart(Request $request)
     {
         $cart = session()->get('cart', []);
-        $updatedCart = $request->input('cart', []);
-        $tax = $request->input('tax', 0);
-        $shipping_cost = $request->input('shipping_cost', 0);
-        $discount = $request->input('discount', 0);
 
-        $subtotal = 0;
-
-        foreach ($updatedCart as $id => $details) {
+        foreach ($request->input('cart', []) as $id => $item) {
             if (isset($cart[$id])) {
-                $cart[$id]['quantity'] = max(1, (int)$details['quantity']); // Ensure quantity is at least 1
-                $subtotal += $cart[$id]['quantity'] * $cart[$id]['price'];
+                $cart[$id]['quantity'] = $item['quantity'];
             }
         }
 
         session()->put('cart', $cart);
-        session()->put('tax', $tax);
-        session()->put('shipping_cost', $shipping_cost);
-        session()->put('discount', $discount);
 
-        $taxAmount = $subtotal * ($tax / 100);
-        $total = $subtotal + $taxAmount + $shipping_cost - $discount;
-
-        // Return JSON response for real-time updates
-        return response()->json([
-            'subtotal' => $subtotal,
-            'total' => $total,
-        ]);
+        return redirect()->route('orders.create');
     }
 
 
+    // Add More Products
 
-
-    public function checkout(Request $request)
-    {
-        $cart = session()->get('cart', []);
-        if (empty($cart)) {
-            return back()->with('error', 'Cart is empty.');
-        }
-
-        // Save the cart as a draft order
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'order_number' => Order::generateOrderNumber(),
-            'product_details' => json_encode($cart),  // Store cart as JSON
-            'quantity' => array_sum(array_column($cart, 'quantity')),
-            'subtotal_price' => $this->cartService->calculateSubtotal($cart),
-            'tax' => $request->input('tax', 0), // Get tax from form input
-            'shipping_cost' => $request->input('shipping_cost', 0), // Get shipping cost
-            'discount' => $request->input('discount', 0), // Get discount
-            'total_price' => $this->cartService->calculateTotal($cart, $request),
-            'status' => 'draft',  // Set status as draft initially
-        ]);
-
-        // Store in session or redirect to edit page
-        session()->put('order_id', $order->id);
-
-        // Redirect to edit the order
-        return redirect()->route('orders.show', $order->id)->with('success', 'Proceeding to order edit.');
-    }
-
-    protected $cartService;
-    public function __construct(CartService $cartService)
-    {
-        $this->cartService = $cartService;
-    }
-
-    public function someFunction($cart, $request)
-    {
-        $subtotal = $this->cartService->calculateSubtotal($cart);
-        $total = $this->cartService->calculateTotal($cart, $request);
-
-        // Continue with your logic...
-    }
-
-
-
-
-
-
-    // public function checkout()
-    // {
-    //     $cart = session()->get('cart', []);
-    //     if (empty($cart)) {
-    //         return back()->with('error', 'Cart is empty.');
-    //     }
-
-    //     // Retrieve session values
-    //     $subtotal = array_sum(array_map(fn($item) => $item['quantity'] * $item['price'], $cart));
-    //     $tax = session()->get('tax', 0);
-    //     $shipping_cost = session()->get('shipping_cost', 0);
-    //     $discount = session()->get('discount', 0);
-
-    //     // Calculate totals
-    //     $taxAmount = $subtotal * ($tax / 100);
-    //     $total_price = $subtotal + $taxAmount + $shipping_cost - $discount;
-
-    //     // Save order
-    //     $order = Order::create([
-    //         'user_id' => Auth::id(),
-    //         'order_number' => Order::generateOrderNumber(),
-    //         'product_details' => json_encode($cart), // Store as JSON
-    //         'quantity' => array_sum(array_column($cart, 'quantity')),
-    //         'subtotal_price' => $subtotal,
-    //         'tax' => $taxAmount,
-    //         'shipping_cost' => $shipping_cost,
-    //         'discount' => $discount,
-    //         'total_price' => $total_price,
-    //         'status' => 'pending',
-    //     ]);
-
-    //     // Clear session
-    //     session()->forget(['cart', 'tax', 'shipping_cost', 'discount']);
-
-    //     return redirect()->route('orders.show', $order->id)->with('success', 'Order placed successfully.');
-    // }
-
-
+    
 }

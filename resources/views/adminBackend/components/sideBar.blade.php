@@ -168,9 +168,9 @@
                     <div data-i18n="Container">View All Order</div>
                 </a>
             </li>
-            <li class="menu-item {{ Request::is('layouts-fluid') ? 'active' : '' }}">
-                <a href="{{ route('products.preview-pdf') }}" class="menu-link">
-                    <div data-i18n="Fluid">Products PDF</div>
+            <li class="menu-item {{ Request::is('customer') ? 'active' : '' }}">
+                <a href="{{ route('customers.create') }}" class="menu-link">
+                    <div data-i18n="Fluid">Customer Create</div>
                 </a>
             </li>
             

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
@@ -54,6 +55,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('singleView_category/{uuid}', [CategoryController::class, 'singleView_category'])->name('category.singleView');
 });
 
+// Customer
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('customers/create', [CustomerController::class, 'create'])->name('customers.create');
+    Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');
+});
+
+
 // Products Routes
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('products', [ProductController::class, 'index'])->name('products.index');
@@ -81,26 +89,34 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
 
-    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+
+
+    Route::get('/pos', [PosController::class, 'showPos'])->name('pos.index');
     Route::post('/pos/add-product', [PosController::class, 'addProduct'])->name('pos.add');
     Route::get('/pos/remove-product/{id}', [PosController::class, 'removeProduct'])->name('pos.remove');
-    Route::get('/pos/clear-cart', [PosController::class, 'clearCart'])->name('pos.clear');
-    Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
-    Route::post('/pos/update-cart', [PosController::class, 'updateCart'])->name('pos.updateCart');
-    // Route::post('/transactions/checkout', [TransactionController::class, 'checkout'])->name('transactions.checkout');
+    Route::post('cart/add', [PosController::class, 'storeCartInDatabase'])->name('cart.add');
+    Route::post('cart/update', [PosController::class, 'updateCart'])->name('pos.update');
+
+
+    // Route::get('/pos/clear-cart', [PosController::class, 'clearCart'])->name('pos.clear');
+    // Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+    // Route::post('/pos/update-cart', [PosController::class, 'updateCart'])->name('pos.updateCart');
 });
 
 // order 
 Route::middleware(['auth', 'role:admin'])->group(function () {
+    // Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    // Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+    // Route::get('/orders/{id}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+    // Route::post('/orders/{orderId}/update', [OrderController::class, 'update'])->name('orders.update');
+    // Route::post('/orders/{orderId}/add-product', [OrderController::class, 'addProduct'])->name('orders.addProduct');
+    // Route::post('/orders/{id}/proceed', [OrderController::class, 'proceed'])->name('orders.proceed');
+
+    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('/orders/store', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-    Route::get('/orders/{id}/edit', [OrderController::class, 'edit'])->name('orders.edit');
-    Route::post('/orders/{orderId}/update', [OrderController::class, 'update'])->name('orders.update');
-    Route::post('/orders/{orderId}/add-product', [OrderController::class, 'addProduct'])->name('orders.addProduct');
-    Route::post('/orders/{id}/proceed', [OrderController::class, 'proceed'])->name('orders.proceed');
+
 });
-
-
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');

@@ -1,4 +1,4 @@
-@extends('adminBackend.adminLayout')
+{{-- @extends('adminBackend.adminLayout')
 
 @section('content')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -126,7 +126,7 @@
             </thead>
             <tbody>
                 @php $subtotal = 0; @endphp
-                @foreach ($products as $product)
+                @foreach ($cart as $product)
                     @php
                         $productTotal = $product['quantity'] * $product['price'];
                         $subtotal += $productTotal;
@@ -178,4 +178,4 @@
             
         </div>
     </div>
-@endsection
+@endsection --}}

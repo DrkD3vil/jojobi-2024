@@ -227,8 +227,6 @@
         }
     </style>
 
-    <h1>Point of Sale</h1>
-
     <?php if(session('success')): ?>
         <div class="alert alert-success"><?php echo e(session('success')); ?></div>
     <?php endif; ?>
@@ -239,94 +237,71 @@
 
     
 
- <!-- Add Product Form -->
-<form action="<?php echo e(route('pos.add')); ?>" method="POST">
-    <?php echo csrf_field(); ?>
-    <label for="barcode">Barcode or Product Name:</label>
-    <input type="text" id="barcode" name="barcode" placeholder="Enter Barcode/Product Name" required>
-    <button type="submit">Add Product</button>
-</form>
 
-<!-- Cart Table -->
-<h2>Product Table</h2>
-<form action="<?php echo e(route('pos.update')); ?>" method="POST">
-    <?php echo csrf_field(); ?>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Barcode</th>
-                <th>Product Image</th>
-                <th>Product Name</th>
-                <th>Quantity</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php $subtotal_price = 0; ?>
-            <?php $__empty_1 = true; $__currentLoopData = session('cart', []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                <?php $subtotal_price += $item['quantity'] * $item['price']; ?>
+<?php $__env->startSection('content'); ?>
+    <h1>Add Product to Cart</h1>
+
+    <!-- Add Product Form -->
+    <form action="<?php echo e(route('pos.add.product')); ?>" method="POST">
+        <?php echo csrf_field(); ?>
+        <input type="hidden" name="cart_id" value="<?php echo e($cart_id); ?>">
+
+        <label for="barcode">Barcode or Product Name:</label>
+        <input type="text" id="barcode" name="barcode" placeholder="Enter Barcode/Product Name" required>
+
+        <button type="submit">Add Product</button>
+    </form>
+
+    <!-- Cart Table -->
+    <h2>Current Cart</h2>
+    <form action="<?php echo e(route('pos.update', ['cart_id' => $cart_id])); ?>" method="POST">
+        <?php echo csrf_field(); ?>
+        <table border="1" cellspacing="0" cellpadding="5">
+            <thead>
                 <tr>
-                    <td><?php echo e($item['barcode']); ?></td>
-                    <td><img src="<?php echo e(asset('baackend_images/' . $item['image'])); ?>" alt="Product Image" width="50"></td>
-                    <td><?php echo e($item['name']); ?></td>
-                    <td>
-                        <input type="number" name="cart[<?php echo e($id); ?>][quantity]" value="<?php echo e($item['quantity']); ?>" min="1" style="width: 60px;">
-                    </td>
-                    <td><?php echo e($item['category']); ?></td>
-                    <td>$<?php echo e(number_format($item['price'], 2)); ?></td>
-                    <td><a href="<?php echo e(route('pos.remove', $id)); ?>">Remove</a></td>
+                    <th>Barcode</th>
+                    <th>Product Image</th>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Actions</th>
                 </tr>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+            </thead>
+            <tbody>
+                <?php $subtotal_price = 0; ?>
+                <?php $__currentLoopData = $cart_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
+                        $subtotal_price += $item['quantity'] * $item['price'];
+                    ?>
+                    <tr>
+                        <td><?php echo e($item['barcode']); ?></td>
+                        <td><img src="<?php echo e(asset('baackend_images/' . $item['image'])); ?>" alt="Product Image" width="50"></td>
+                        <td><?php echo e($item['name']); ?></td>
+                        <td>
+                            <input type="number" name="cart[<?php echo e($id); ?>][quantity]" value="<?php echo e($item['quantity']); ?>" min="1" style="width: 60px;">
+                        </td>
+                        <td><?php echo e($item['category']); ?></td>
+                        <td>$<?php echo e(number_format($item['price'], 2)); ?></td>
+                        <td><a href="<?php echo e(route('pos.remove', ['id' => $id, 'cart_id' => $cart_id])); ?>">Remove</a></td>
+                    </tr>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </tbody>
+            <tfoot>
                 <tr>
-                    <td colspan="7">No products in the cart.</td>
+                    <td colspan="5" style="text-align: right;">Subtotal Price:</td>
+                    <td id="subtotal">$<?php echo e(number_format($subtotal_price, 2)); ?></td>
+                    <td></td>
                 </tr>
-            <?php endif; ?>
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="5" style="text-align: right;">Subtotal Price:</td>
-                <td id="subtotal">$<?php echo e(number_format($subtotal_price, 2)); ?></td>
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
-    <button type="submit">Update Cart</button>
-</form>
+            </tfoot>
+        </table>
 
-<form action="<?php echo e(route('cart.add')); ?>" method="POST" style="text-align:right;">
-    <?php echo csrf_field(); ?>
-    <button type="submit">Proceed</button>
-</form>
+        <button type="submit">Update Cart</button>
+    </form>
 
-
-
-    <script>
-        // Function to update cart totals using AJAX
-        function updateCart() {
-            let cartData = $('#cartForm').serialize(); // Collect form data
-
-            $.ajax({
-                url: "",
-                method: "POST",
-                data: cartData,
-                success: function(response) {
-                    // Update the subtotal, tax, shipping cost, discount, and total price
-                    $('#subtotal').text(`$${response.subtotal.toFixed(2)}`);
-                    $('#total_price').text(`$${response.total.toFixed(2)}`);
-                },
-                error: function(xhr) {
-                    alert('Something went wrong. Please try again.');
-                }
-            });
-        }
-
-        // Attach event listeners for real-time updates
-        $(document).on('change', '.update-field, .quantity-input', function() {
-            updateCart();
-        });
-    </script>
+    <form action="<?php echo e(route('cart.add')); ?>" method="POST" style="text-align:right;">
+        <?php echo csrf_field(); ?>
+        <button type="submit">Proceed to Order</button>
+    </form>
 <?php $__env->stopSection(); ?>
-
-<?php echo $__env->make('adminBackend.adminLayout', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH E:\Bijoy Dey\Laravel\jojobi\resources\views/adminBackend/pos/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('adminBackend.adminLayout', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH E:\Bijoy Dey\Laravel\jojobi\resources\views/adminBackend/pos/add_more.blade.php ENDPATH**/ ?>

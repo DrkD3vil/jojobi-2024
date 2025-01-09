@@ -1,60 +1,51 @@
  <!-- Adjust the layout as per your project -->
 
 <?php $__env->startSection('content'); ?>
+    <h1>Orders</h1>
 
-    <h1>All Orders</h1>
-
-    <?php if(session('success')): ?>
-        <div class="alert alert-success"><?php echo e(session('success')); ?></div>
-    <?php endif; ?>
-
-    <table class="table table-bordered">
+    <table border="1" cellspacing="0" cellpadding="5">
         <thead>
             <tr>
-                <th>#</th>
-                <th>Order Number</th>
                 <th>Customer Name</th>
+                <th>Products</th>
+                <th>Subtotal Price</th>
+                <th>Tax</th>
+                <th>Shipping Cost</th>
                 <th>Total Price</th>
                 <th>Status</th>
-                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            <?php $__empty_1 = true; $__currentLoopData = $orders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+            <?php $__currentLoopData = $orders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <tr>
-                    <td><?php echo e($loop->iteration); ?></td>
-                    <td><?php echo e($order->order_number); ?></td>
-                    <td><?php echo e($order->customer_name ?? 'N/A'); ?></td>
-                    <td>$<?php echo e(number_format($order->total_price, 2)); ?></td>
+                    <td><?php echo e($order->customer_name); ?></td>
                     <td>
-                        <span class="badge bg-<?php echo e($order->status === 'processed' ? 'success' : 'warning'); ?>">
-                            <?php echo e(ucfirst($order->status)); ?>
+                        <ul>
+                            <?php
+                                $products = json_decode($order->products_name, true); // Decode as associative array
+                            ?>
+                            <?php if(is_array($products)): ?>
+                                <?php $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <li>
+                                        <?php echo e($product['quantity']); ?> x <?php echo e($product['name']); ?> 
+                                        - $<?php echo e(number_format($product['quantity'] * $product['price'], 2)); ?>
 
-                        </span>
+                                    </li>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php else: ?>
+                                <li>N/A</li>
+                            <?php endif; ?>
+                        </ul>
                     </td>
-                    <td>
-                        <a href="<?php echo e(route('orders.edit', $order->id)); ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="#" 
-                           class="btn btn-success btn-sm"
-                           onclick="return confirm('Are you sure you want to proceed this order?');">
-                           Proceed
-                        </a>
-                    </td>
+                    <td>$<?php echo e(number_format($order->subtotal_price, 2)); ?></td>
+                    <td>$<?php echo e(number_format($order->tax, 2)); ?></td>
+                    <td>$<?php echo e(number_format($order->shipping_cost, 2)); ?></td>
+                    <td>$<?php echo e(number_format($order->total_price, 2)); ?></td>
+                    <td><?php echo e(ucfirst($order->status)); ?></td>
                 </tr>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                <tr>
-                    <td colspan="6" class="text-center">No orders found.</td>
-                </tr>
-            <?php endif; ?>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </tbody>
     </table>
-
-    <!-- Pagination -->
-    <div class="d-flex justify-content-center">
-        <?php echo e($orders->links()); ?>
-
-    </div>
-
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('adminBackend.adminLayout', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH E:\Bijoy Dey\Laravel\jojobi\resources\views/adminBackend/orders/index.blade.php ENDPATH**/ ?>

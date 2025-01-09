@@ -4,20 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
 
 class Order extends Model
 {
     use HasFactory;
 
-    // Table Name (optional if table name is not plural of model name)
+    // Define the table name if it doesn't follow Laravel's pluralization rule
     protected $table = 'orders';
 
-    // Fillable Fields
+    // The attributes that are mass assignable
     protected $fillable = [
-        'user_id',
-        'order_number',
-        'product_details',
-        'quantity',
+        'uuid',
+        'cart_id',
+        'customer_name',
+        'products_name',
         'subtotal_price',
         'tax',
         'shipping_cost',
@@ -26,47 +28,26 @@ class Order extends Model
         'status',
     ];
 
-    // Casts (for JSON fields)
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Automatically generate UUID
+        static::creating(function ($model) {
+            $model->uuid = (string) Str::uuid();
+        });
+    }
+
+    // Cast products_name to an array when retrieving it
     protected $casts = [
-        'product_details' => 'array',
+        'products_name' => 'array',
     ];
 
-    /**
-     * Relationship: Order belongs to a User
-     */
-    public function user()
+    // Define the relationship with the Cart model (if needed)
+    public function cart()
     {
-        return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Generate a unique order number
-     */
-    public static function generateOrderNumber()
-    {
-        return 'ORD-' . strtoupper(uniqid());
-    }
-
-    /**
-     * Calculate the total price of the order
-     */
-    public static function calculateTotalPrice($subtotal, $tax = 0, $shipping = 0, $discount = 0)
-    {
-        $total = $subtotal + $tax + $shipping - $discount;
-        return max(0, $total); // Ensure total is not negative
-    }
-
-    /**
-     * Get readable status
-     */
-    public function getReadableStatusAttribute()
-    {
-        $statuses = [
-            'pending' => 'Pending',
-            'completed' => 'Completed',
-            'canceled' => 'Canceled',
-        ];
-
-        return $statuses[$this->status] ?? 'Unknown';
+        return $this->belongsTo(Cart::class);
     }
 }
+
+
