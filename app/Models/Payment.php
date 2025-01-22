@@ -10,10 +10,20 @@ class Payment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['transaction_id', 'amount', 'payment_method', 'status'];
+    protected $fillable = [
+        'payment_id',
+        'transaction_id',
+        'payment_method',
+        'total_amount',
+        'payment_amount',
+        'change_amount',
+        'payment_status',
+        'payment_date',
+    ];
 
+    // Define relationship with the transaction table
     public function transaction()
     {
-        return $this->belongsTo(Transaction::class);
+        return $this->belongsTo(Transaction::class, 'transaction_id');
     }
 }

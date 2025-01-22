@@ -17,17 +17,55 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function view_category()
+    public function indexCategory(Request $request)
     {
         $user = Auth::user();
-        $data = Category::paginate(10);
+        
+        // Get current page and entries per page from the request
+        $page = $request->input('page', 1);  // Current page
+        $entriesPerPage = $request->input('entries_per_page', 10);  // Entries per page, default is 10
+    
+        // Query to fetch categories ordered by 'created_at' with pagination
+        $data = Category::orderBy('created_at', 'desc')->paginate($entriesPerPage);
+    
+        // If the request is AJAX, return data as JSON
+        if ($request->ajax()) {
+            // Return the table rows as HTML
+            $dataHtml = view('adminBackend.categories.table_rows', compact('data'))->render();
+            return response()->json([
+                'data' => $dataHtml,
+                'pagination' => $data->links('pagination::bootstrap-5')->render(),
+                'info' => 'Showing ' . $data->firstItem() . ' to ' . $data->lastItem() . ' of ' . $data->total() . ' entries'
+            ]);
+        }
+    
+        // Return the full view if it's not an AJAX request
         return view('adminBackend.categories.category', compact('data', 'user'));
     }
+
+
+    public function view_category(Request $request)
+    {
+        $user = Auth::user();
+        
+        
+        return view('adminBackend.categories.view_category', compact( 'user'));
+    }
+    
+    
+
 
     /**
      * Show the form for creating a new resource.
      */
     // Add Category
+    public function create()
+    {
+        $user = Auth::user();
+        // Fetch categories to populate the category select dropdown
+        $data = Category::all();
+        return view('adminBackend.categories.add_category', compact('data', 'user'));
+    }
     // Add Category
     public function add_category(Request $request)
     {
@@ -40,6 +78,7 @@ class CategoryController extends Controller
         ]);
     
         try {
+            Log::info('Store Category Request:', $request->all());
             // Create and save the category
             $category = new Category;
             $category->category_name = $request->category_name;
@@ -94,9 +133,10 @@ class CategoryController extends Controller
             $category->uuid = (string) Str::uuid();
             $category->categoryid = Category::generateUniqueIdentifier();
             $category->save();
+            Log::info($category);
     
             // Redirect with success message
-            return redirect()->route('admin.category')->with('success', 'Category added successfully');
+            return redirect()->route('category.create')->with('success', 'Category added successfully');
         } catch (\Exception $e) {
             // Log the error
             Log::error('Error adding category: ' . $e->getMessage());
@@ -106,6 +146,23 @@ class CategoryController extends Controller
         }
     }
     
+
+    // public function generateBarcode()
+    // {
+    //     do {
+    //         $barcode = random_int(1000000000, 9999999999);
+    //     } while (Category::where('category_barcode', $barcode)->exists());
+
+    //     return response()->json(['barcode' => $barcode]);
+    // }
+
+    // public function validateBarcode(Request $request)
+    // {
+    //     $barcode = $request->input('barcode');
+    //     $exists = Category::where('category_barcode', $barcode)->exists();
+
+    //     return response()->json(['valid' => !$exists]);
+    // }
 
     // Delete category
      
@@ -230,41 +287,96 @@ class CategoryController extends Controller
     
 
     // Search Categories
-    public function search_category(Request $request)
-    {
-        $user = Auth::user();
-        $searchTerm = $request->input('search_term');
-        $dateInput = $request->input('search_date');
-        $query = Category::query();
+//     public function search_category(Request $request)
+// {
+//     $user = Auth::user();
+//     $searchTerm = $request->input('search_term');
+//     $dateInput = $request->input('search_date');
+//     $query = Category::query();
 
-        if (!empty($searchTerm)) {
-            $query->where(function ($query) use ($searchTerm) {
-                $query->where('categoryid', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('category_name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('category_barcode', 'like', '%' . $searchTerm . '%');
-            });
-        }
+//     // Apply search term filter if provided
+//     if (!empty($searchTerm)) {
+//         $query->where(function ($query) use ($searchTerm) {
+//             $query->where('categoryid', 'like', '%' . $searchTerm . '%')
+//                 ->orWhere('category_name', 'like', '%' . $searchTerm . '%')
+//                 ->orWhere('category_barcode', 'like', '%' . $searchTerm . '%');
+//         });
+//     }
 
-        if ($dateInput) {
-            try {
-                // Parse the date using the format 'Y-m-d'
-                $parsedDate = Carbon::createFromFormat('Y-m-d', $dateInput)->format('Y-m-d');
-                $query->whereDate('created_at', $parsedDate);
-            } catch (\Exception $e) {
-                // Handle invalid date format
-                return redirect()->back()->with('error', 'Invalid date format.');
-            }
-        }
+//     // Apply date filter if provided
+//     if ($dateInput) {
+//         try {
+//             $parsedDate = Carbon::createFromFormat('Y-m-d', $dateInput)->format('Y-m-d');
+//             $query->whereDate('created_at', $parsedDate);
+//         } catch (\Exception $e) {
+//             return redirect()->back()->with('error', 'Invalid date format.');
+//         }
+//     }
 
-        try {
-            $data = $query->paginate(10);
-        } catch (\Exception $e) {
-            Log::error('Search query failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'An error occurred while performing the search. Please try again.');
-        }
+//     // Get search results with pagination
+//     $searchdata = $query->paginate(10);
 
-        return view('adminBackend.categories.category', compact('data', 'user'));
+//     return view('adminBackend.categories.view_category', compact('searchdata', 'user'));
+// }
+
+
+
+public function search_category(Request $request)
+{
+    $searchTerm = $request->input('search_term');
+    $dateInput = $request->input('search_date');
+
+    // Return no data if both search term and search date are empty
+    if (empty($searchTerm) && empty($dateInput)) {
+        return response()->json([
+            'data' => [],
+        ]);
     }
+
+    $query = Category::query();
+
+    // Apply search term filter if provided
+    if (!empty($searchTerm)) {
+        $query->where(function ($query) use ($searchTerm) {
+            $query->where('categoryid', 'like', '%' . $searchTerm . '%')
+                ->orWhere('category_name', 'like', '%' . $searchTerm . '%')
+                ->orWhere('category_barcode', 'like', '%' . $searchTerm . '%');
+        });
+    }
+
+    // Apply date filter if provided
+    if (!empty($dateInput)) {
+        try {
+            $parsedDate = Carbon::createFromFormat('Y-m-d', $dateInput)->format('Y-m-d');
+            $query->whereDate('created_at', $parsedDate);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Invalid date format.'], 422);
+        }
+    }
+
+    // Get search results
+    $categories = $query->get();
+
+    // Return JSON response
+    return response()->json([
+        'data' => $categories->map(function ($category) {
+            return [
+                'id' => $category->id,
+                'categoryid' => $category->categoryid,
+                'category_name' => $category->category_name,
+                'category_barcode' => $category->category_barcode,
+                'created_at' => $category->created_at->format('F d, Y'),
+                'edit_url' => route('category.edit', $category->uuid),
+                'delete_url' => route('category.delete', $category->uuid),
+            ];
+        }),
+    ]);
+}
+
+
+
+
+
     // PREVIEW CATEGORY
     public function previewCategoriesPDF()
     {

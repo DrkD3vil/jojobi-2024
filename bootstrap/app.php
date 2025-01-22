@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         //
         $middleware->alias([
             'role' => \App\Http\Middleware\AdminMiddleware::class,
+            'notificationCount'=> \App\Http\Middleware\NotificationCountMiddleware::class,
         ]);
         
     })

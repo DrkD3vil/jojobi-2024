@@ -20,6 +20,8 @@ class AdminMiddleware
     public function handle($request, Closure $next, $role)
     {
         if (Auth::check() && Auth::user()->role === $role) {
+            // Share the role with all views
+            view()->share('userRole', Auth::user()->role);
             return $next($request);
         }
 

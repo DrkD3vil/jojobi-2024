@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Cart extends Model
 {
@@ -18,17 +17,15 @@ class Cart extends Model
         'subtotal_price',
     ];
 
-    protected $casts = [
-        'items' => 'array', // Automatically cast the JSON column to an array
-    ];
+    // protected $casts = [
+    //     'items' => 'array', // Automatically cast items JSON to an array
+    // ];
 
-    protected static function boot()
+    /**
+     * Get the cart items associated with this cart.
+     */
+    public function items()
     {
-        parent::boot();
-
-        // Automatically generate UUID
-        static::creating(function ($model) {
-            $model->uuid = (string) Str::uuid();
-        });
+        return $this->hasMany(CartItem::class, 'cart_id', 'cart_id');
     }
 }

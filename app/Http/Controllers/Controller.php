@@ -9,8 +9,8 @@ abstract class Controller
 {
     //
     public function index()
-{
-    $user = Auth::user(); // Get the currently authenticated user
-    return view('dashboard', compact('user')); // Pass the user data to the dashboard view
-}
+    {
+        $user = Auth::user(); // Get the currently authenticated user
+        return view('dashboard', compact('user')); // Pass the user data to the dashboard view
+    }
 }

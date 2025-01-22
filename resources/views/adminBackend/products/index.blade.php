@@ -94,6 +94,7 @@
                     <th>Name</th>
                     <th>Barcode</th>
                     <th>Category</th>
+                    <th>Supplier</th>
                     <th>Price</th>
                     <th>Stock</th>
                     <th>Image</th>
@@ -114,6 +115,7 @@
                             @endif
                         </td>
                         <td>{{ $product->category->category_name ?? 'N/A' }}</td>
+                        <td>{{ $product->supplier->supplier_name ?? 'N/A' }}</td>
                         <td>{{ $product->sell_price }}</td>
                         <td>{{ $product->stock_quantity }}</td>
                         <td>

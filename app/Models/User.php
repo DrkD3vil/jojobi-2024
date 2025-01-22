@@ -87,7 +87,7 @@ class User extends Authenticatable
     public function profileImageUrl(): string
     {
         return $this->profile_image 
-            ? asset('storage/profile_images/' . $this->profile_image) 
+            ? asset('baackend_images/profile_images/' . $this->profile_image) 
             : asset('images/default-profile.png');
     }
 }

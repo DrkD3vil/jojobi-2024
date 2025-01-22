@@ -117,3 +117,6 @@
   text-align: center;
   margin-top: 1.25rem;
 }
+.box-border.h-full.w-full {
+  display: none !important;
+}

@@ -19,6 +19,8 @@ class Customer extends Model
         'image',
         'barcode_number',
         'barcode_image',
+        'advance_amount',
+        'due_amount'
     ];
 
     protected static function boot()

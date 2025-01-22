@@ -6,6 +6,7 @@ use App\Exports\ProductsExport;
 use App\Imports\ProductsImport;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Picqer\Barcode\BarcodeGeneratorPNG;
@@ -14,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class ProductController extends Controller
 {
@@ -26,9 +28,76 @@ class ProductController extends Controller
     }
 
 
+// Check for products Expire date and Alart
+// public function checkProductExpiry(Request $request) {
+//     $user = Auth::user();
+//     // Get current date and date 7 days from now
+//     $currentDate = Carbon::now();
+//     $sevenDaysFromNow = Carbon::now()->addDays(7);
 
+//     // Query products based on expiry status
+//     $expiredProducts = Product::where('expire_date', '<', $currentDate)
+//                                 ->where('stock_quantity', '>', 0) // Skip out-of-stock products
+//                                 ->get(); // Expired products
+//     $todayExpiringProducts = Product::whereDate('expire_date', '=', $currentDate)
+//                                      ->where('stock_quantity', '>', 0) // Skip out-of-stock products
+//                                      ->get(); // Expiring today
+//     $productsExpiringSoon = Product::whereBetween('expire_date', [$currentDate, $sevenDaysFromNow])
+//                                     ->whereDate('expire_date', '>', $currentDate)
+//                                     ->where('stock_quantity', '>', 0) // Skip out-of-stock products
+//                                     ->get(); // Products expiring in the next 7 days
 
+//     // Count of products expiring today and in the next 7 days
+//     $expiringTodayCount = Product::whereDate('expire_date', '=', $currentDate)
+//                                  ->where('stock_quantity', '>', 0)
+//                                  ->count();
+//     $expiringSoonCount = Product::whereBetween('expire_date', [$currentDate, $sevenDaysFromNow])
+//                                 ->whereDate('expire_date', '>', $currentDate)
+//                                 ->where('stock_quantity', '>', 0)
+//                                 ->count();
 
+//     $notificationCount = $expiringTodayCount + $expiringSoonCount;
+
+//     // Pass this data to the view
+//     return view('adminBackend.notifications.index', compact('expiredProducts', 'todayExpiringProducts', 'productsExpiringSoon', 'notificationCount', 'user'));
+// }
+
+public function checkProductExpiry(Request $request) {
+    $user = Auth::user();
+    
+    // Get current date and date 7 days from now
+    $currentDate = Carbon::now();
+    $sevenDaysFromNow = Carbon::now()->addDays(7);
+
+    // Query products based on expiry status
+    $expiredProducts = Product::where('expire_date', '<', $currentDate)
+                                ->where('stock_quantity', '>', 0) // Skip out-of-stock products
+                                ->get(); // Expired products
+
+    $todayExpiringProducts = Product::whereDate('expire_date', '=', $currentDate)
+                                     ->where('stock_quantity', '>', 0) // Skip out-of-stock products
+                                     ->get(); // Expiring today
+
+    $productsExpiringSoon = Product::whereBetween('expire_date', [$currentDate, $sevenDaysFromNow])
+                                   ->whereDate('expire_date', '>', $currentDate)
+                                   ->where('stock_quantity', '>', 0) // Skip out-of-stock products
+                                   ->get(); // Products expiring in the next 7 days
+
+    // Count of products expiring today and in the next 7 days
+    $expiringTodayCount = Product::whereDate('expire_date', '=', $currentDate)
+                                 ->where('stock_quantity', '>', 0)
+                                 ->count();
+    $expiringSoonCount = Product::whereBetween('expire_date', [$currentDate, $sevenDaysFromNow])
+                               ->whereDate('expire_date', '>', $currentDate)
+                               ->where('stock_quantity', '>', 0)
+                               ->count();
+    
+
+    $notificationCount = $expiringTodayCount + $expiringSoonCount;
+
+    // Pass this data to the notification view
+    return view('adminBackend.notifications.index', compact('expiredProducts', 'todayExpiringProducts', 'productsExpiringSoon', 'notificationCount', 'user'));
+}
 
 
     // Show the form to create a new product
@@ -37,7 +106,8 @@ class ProductController extends Controller
         $user = Auth::user();
         // Fetch categories to populate the category select dropdown
         $categories = Category::all();
-        return view('adminBackend.products.add-product', compact('categories', 'user'));
+        $suppliers = Supplier::all(); // Fetch suppliers to populate the supplier select dropdown
+        return view('adminBackend.products.add-product', compact('categories', 'suppliers', 'user'));
     }
 
     // Store a new product in the database
@@ -53,10 +123,13 @@ class ProductController extends Controller
             'discount_percentage' => 'nullable|numeric|max:100',
             'discounted_price' => 'nullable|numeric',
             'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'required|exists:suppliers,id',
             'stock_quantity' => 'required|integer',
             'brand' => 'nullable|string|max:255',
             'image' => 'nullable|image',
             'product_type' => 'nullable|string',
+            'manufacture_date' => 'nullable|date',
+    'expire_date' => 'nullable|date|after_or_equal:manufacture_date',
             'weight' => 'nullable|numeric',
             'length' => 'nullable|numeric',
             'width' => 'nullable|numeric',
@@ -71,6 +144,7 @@ class ProductController extends Controller
             $product->name = $request->name;
             $product->description = $request->description;
             $product->category_id = $request->category_id;
+            $product->supplier_id = $request->supplier_id;
             $product->original_price = $request->original_price;
             $product->buy_price = $request->buy_price;
             $product->sell_price = $request->sell_price;
@@ -79,6 +153,8 @@ class ProductController extends Controller
             $product->stock_quantity = $request->stock_quantity;
             $product->brand = $request->brand;
             $product->product_type = $request->product_type;
+            $product->manufacture_date = $request->manufacture_date;
+$product->expire_date = $request->expire_date;
             $product->weight = $request->weight;
             $product->length = $request->length;
             $product->width = $request->width;
@@ -92,9 +168,18 @@ class ProductController extends Controller
                 return redirect()->back()->withErrors(['category_id' => 'Invalid category selected.']);
             }
 
+            // Fetch the category details
+            $supplier = Supplier::find($validatedData['supplier_id']);
+            if (!$supplier) {
+                return redirect()->back()->withErrors(['supplier_id' => 'Invalid supplier selected.']);
+            }
+
+
             // Assign category barcode details
             $product->category_barcode = $category->category_barcode;
             $product->category_barcode_image = $category->category_barcode_image;
+            $product->supplier_name = $supplier->supplier_name;
+
 
             // Handle image upload for product image
             if ($request->hasFile('image')) {
@@ -136,7 +221,7 @@ class ProductController extends Controller
             $product->product_id = Product::generateUniqueIdentifier();
             $product->save();
 
-            return redirect()->route('admin.products')->with('success', 'Product added successfully.');
+            return redirect()->route('products.create')->with('success', 'Product added successfully.');
         } catch (\Exception $e) {
             // Log the error
             Log::error('Error adding product: ' . $e->getMessage());

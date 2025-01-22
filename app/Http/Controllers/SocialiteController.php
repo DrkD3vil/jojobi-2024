@@ -6,9 +6,11 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SocialiteController extends Controller
 {
@@ -26,38 +28,51 @@ class SocialiteController extends Controller
     public function googleAuthentication()
     {
         try {
-            // Get the user data from Google API
             $googleUser = Socialite::driver('google')->user();
-
-            // Check if the user exists in the database
+    
+            if (empty($googleUser->id) || empty($googleUser->email)) {
+                throw new Exception('Google user data is incomplete.');
+            }
+    
             $user = User::where('google_id', $googleUser->id)->first();
-
+    
             if ($user) {
                 Auth::login($user);
-                return redirect()->route('dashboard'); // Redirect to your desired route after successful login
+                return redirect()->route('dashboard');
             } else {
-                $avatarContent = file_get_contents($googleUser->avatar);
-                $avatarPath = 'profile_images/' . uniqid() . '.jpg';
-
-                // Store the avatar in public storage
-                Storage::put('public/' . $avatarPath, $avatarContent);
-
-                // Create a new user if not found
+                $avatarPath = null;
+                if (!empty($googleUser->avatar) && filter_var($googleUser->avatar, FILTER_VALIDATE_URL)) {
+                    try {
+                        $avatarContent = file_get_contents($googleUser->avatar);
+    
+                        $avatarDirectory = public_path('baackend_images/profile_images');
+                        if (!File::exists($avatarDirectory)) {
+                            File::makeDirectory($avatarDirectory, 0755, true);
+                        }
+    
+                        $avatarFilename = uniqid() . '.jpg';
+                        $avatarPath = 'baackend_images/profile_images/' . $avatarFilename;
+                        file_put_contents($avatarDirectory . '/' . $avatarFilename, $avatarContent);
+                    } catch (Exception $e) {
+                        Log::warning('Avatar download failed: ' . $e->getMessage());
+                    }
+                }
+    
                 $newUser = User::create([
                     'name' => $googleUser->name,
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
-                    'password' => bcrypt('password'), // Use a default password or generate one securely
-                    // 'profile_image' => $googleUser->avatar, // Store the avatar URL in the profile_images column
-                    'profile_image' => basename($avatarPath)
+                    'password' => bcrypt(Str::random(16)),
+                    'profile_image' => $avatarPath, // Save the full relative path
                 ]);
-
+    
                 Auth::login($newUser);
-                return redirect()->route('dashboard'); // Redirect to your desired route after successful login
+                return redirect()->route('dashboard');
             }
         } catch (Exception $e) {
             Log::error('Google Authentication Error: ' . $e->getMessage());
             return redirect()->route('login')->with('error', 'Unable to log in with Google. Please try again.');
         }
     }
+
 }

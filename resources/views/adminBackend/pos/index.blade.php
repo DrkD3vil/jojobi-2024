@@ -227,104 +227,246 @@
         }
     </style>
 
+
     <h1>Point of Sale</h1>
 
     @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    <div class="alert alert-success" role="alert">
+        {{ session('success') }}
+    </div>
+@endif
 
-    @if (session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+@if (session('error'))
+    <div class="alert alert-danger" role="alert">
+        {{ session('error') }}
+    </div>
+@endif
 
-    {{-- Add New User --}}
-
- <!-- Add Product Form -->
-<form action="{{ route('pos.add') }}" method="POST">
+    <!-- Add Product Form -->
+<!-- Add Product Form -->
+<form action="{{ route('pos.add') }}" method="POST" class="mb-3">
     @csrf
-    <label for="barcode">Barcode or Product Name:</label>
-    <input type="text" id="barcode" name="barcode" placeholder="Enter Barcode/Product Name" required>
-    <button type="submit">Add Product</button>
+    <label for="barcode" class="form-label">Barcode or Product Name:</label>
+    <input type="text" id="barcode" name="barcode" class="form-control" placeholder="Enter Barcode/Product Name" autocomplete="off" required>
 </form>
+
+<!-- Product Results Table -->
+<div id="product-results"></div>
+
+<!-- Suggestions will be displayed here -->
+<div id="suggestions" class="mt-3"></div>
 
 <!-- Cart Table -->
 <h2>Product Table</h2>
-<form action="{{ route('pos.update') }}" method="POST">
-    @csrf
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Barcode</th>
-                <th>Product Image</th>
-                <th>Product Name</th>
-                <th>Quantity</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Actions</th>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Barcode</th>
+            <th>Product Image</th>
+            <th>Product Name</th>
+            <th>Quantity</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="cartBody">
+        @php $subtotal_price = 0; @endphp
+        @forelse($cart as $id => $item)
+            @php $subtotal_price += $item['quantity'] * $item['price']; @endphp
+            <tr id="cartItem-{{ $id }}">
+                <td>{{ $item['barcode'] }}</td>
+                <td>
+                    <img src="{{ asset('baackend_images/' . $item['image']) }}" alt="Product Image" width="50">
+                </td>
+                <td>{{ $item['name'] }}</td>
+                <td>
+                    <input type="number" class="form-control form-control-sm" value="{{ $item['quantity'] }}" min="1" id="quantity-{{ $id }}" data-id="{{ $id }}" onchange="updateQuantity({{ $id }})">
+                </td>
+                <td>{{ $item['category'] }}</td>
+                <td>${{ number_format($item['price'], 2) }}</td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm remove-cart-item" data-id="{{ $id }}" onclick="removeItem({{ $id }})">Remove</button>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @php $subtotal_price = 0; @endphp
-            @forelse(session('cart', []) as $id => $item)
-                @php $subtotal_price += $item['quantity'] * $item['price']; @endphp
-                <tr>
-                    <td>{{ $item['barcode'] }}</td>
-                    <td><img src="{{ asset('baackend_images/' . $item['image']) }}" alt="Product Image" width="50"></td>
-                    <td>{{ $item['name'] }}</td>
-                    <td>
-                        <input type="number" name="cart[{{ $id }}][quantity]" value="{{ $item['quantity'] }}" min="1" style="width: 60px;">
-                    </td>
-                    <td>{{ $item['category'] }}</td>
-                    <td>${{ number_format($item['price'], 2) }}</td>
-                    <td><a href="{{ route('pos.remove', $id) }}">Remove</a></td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="7">No products in the cart.</td>
-                </tr>
-            @endforelse
-        </tbody>
-        <tfoot>
+        @empty
             <tr>
-                <td colspan="5" style="text-align: right;">Subtotal Price:</td>
-                <td id="subtotal">${{ number_format($subtotal_price, 2) }}</td>
-                <td></td>
+                <td colspan="7" class="text-center">No products in the cart.</td>
             </tr>
-        </tfoot>
-    </table>
-    <button type="submit">Update Cart</button>
-</form>
+        @endforelse
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="5" class="text-end"><strong>Subtotal Price:</strong></td>
+            <td colspan="2" id="subtotal"><strong>${{ number_format($subtotal_price, 2) }}</strong></td>
+        </tr>
+    </tfoot>
+</table>
 
-<form action="{{ route('cart.add') }}" method="POST" style="text-align:right;">
-    @csrf
-    <button type="submit">Proceed</button>
-</form>
+    <!-- Proceed Button -->
+    <form action="{{ route('pos.proceed') }}" method="POST" class="text-end">
+        @csrf
+        <button type="submit" class="btn btn-primary">Proceed</button>
+    </form>
 
+    <!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+    $('#barcode').on('input', function () {
+        let query = $(this).val();
+
+        if (query.length > 0) {
+            $.ajax({
+                url: "{{ route('pos.products.search') }}",
+                type: "GET",
+                data: { query: query },
+                success: function (data) {
+                    let productTable = '';
+                    if (data.length > 0) {
+                        productTable += `
+                            <table class="table table-bordered mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>Barcode</th>
+                                        <th>Price</th>
+                                        <th>Stock Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        data.forEach(product => {
+                            const stockStatus = product.out_of_stock ? 'Out of Stock' : 'In Stock';
+                            const disabled = product.out_of_stock ? 'disabled' : '';
+
+                            productTable += `
+                                <tr>
+                                    <td>${product.name}</td>
+                                    <td>${product.product_barcode}</td>
+                                    <td>${product.sell_price}</td>
+                                    <td class="${product.out_of_stock ? 'text-danger' : 'text-success'}">${stockStatus}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary add-to-cart" data-id="${product.id}" data-name="${product.product_name}" data-price="${product.sell_price}" ${disabled}>
+                                            ${product.out_of_stock ? 'Unavailable' : 'Add to Cart'}
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        productTable += `
+                                </tbody>
+                            </table>
+                        `;
+                    } else {
+                        productTable = '<p class="text-danger mt-3">No products found!</p>';
+                    }
+                    $('#product-results').html(productTable);
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                }
+            });
+        } else {
+            $('#product-results').html('');
+        }
+    });
+
+    // Handle Add-to-Cart button click
+    $(document).on('click', '.add-to-cart', function () {
+        const productId = $(this).data('product_barcode');
+        const productName = $(this).data('name');
+        const productPrice = $(this).data('price');
+
+        // Check if the button is disabled (product out of stock)
+        if ($(this).attr('disabled')) {
+            alert('Cannot add this product because it is out of stock.');
+            return;
+        }
+
+        // Add the product via AJAX
+        $.ajax({
+            url: '{{ route('pos.add') }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                barcode: productId
+            },
+            success: function (response) {
+        // Display toaster message
+        toastr.success('Product added successfully');
+
+        // Reload the page after 0.5 seconds (500ms)
+        setTimeout(function () {
+            window.location.reload();
+        }, 500);
+    },
+    error: function () {
+        // Display an error message
+        toastr.error('Failed to add the product. Please try again.');
+
+        // Optionally reload the page after an error (if necessary)
+        setTimeout(function () {
+            window.location.reload();
+        }, 500);
+    }
+        });
+    });
+});
+</script>
 
     <script>
-        // Function to update cart totals using AJAX
-        function updateCart() {
-            let cartData = $('#cartForm').serialize(); // Collect form data
-
+        // Function to update quantity via AJAX
+        function updateQuantity(id) {
+            const quantity = document.getElementById(`quantity-${id}`).value;
+    
+            // Make sure quantity is a valid number
+            if (quantity && quantity > 0) {
+                $.ajax({
+                    url: '{{ route('pos.updateCart') }}', // Route to update the cart
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        id: id,
+                        quantity: quantity
+                    },
+                    success: function(response) {
+                        // Update the subtotal dynamically
+                        $('#subtotal').text(`$${response.subtotal.toFixed(2)}`);
+                    },
+                    error: function() {
+                        alert('Failed to update the quantity.');
+                    }
+                });
+            }
+        }
+    
+        // Function to remove item from the cart via AJAX
+        function removeItem(id) {
             $.ajax({
-                url: "",
-                method: "POST",
-                data: cartData,
-                success: function(response) {
-                    // Update the subtotal, tax, shipping cost, discount, and total price
-                    $('#subtotal').text(`$${response.subtotal.toFixed(2)}`);
-                    $('#total_price').text(`$${response.total.toFixed(2)}`);
+                url: '{{ route('pos.removeFromCart') }}', // Route to remove the item
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    id: id
                 },
-                error: function(xhr) {
-                    alert('Something went wrong. Please try again.');
+                success: function(response) {
+                    // Remove the item row from the table
+                    $(`#cartItem-${id}`).remove();
+                    $('#subtotal').text(`$${response.subtotal.toFixed(2)}`);
+                },
+                error: function() {
+                    alert('Failed to remove the item.');
                 }
             });
         }
-
-        // Attach event listeners for real-time updates
-        $(document).on('change', '.update-field, .quantity-input', function() {
-            updateCart();
-        });
     </script>
 @endsection
+

@@ -28,6 +28,20 @@
                                     aria-label="Star themeselection/materio-bootstrap-html-admin-template-free on GitHub">Star</a>
                             </li>
 
+
+                            <!-- Notifications -->
+                            <li class="nav-item lh-1 me-4">
+    <a href="#" class="nav-link" id="notification-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Expiring Products">
+        <i class="fa fa-bell" style="font-size: 24px; position: relative;">
+            @if($notificationCount > 0)
+                <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 12px;">
+                    {{ $notificationCount }}
+                </span>
+            @endif
+        </i>
+    </a>
+</li>
+
                             <!-- User -->
                             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                                 <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);"
@@ -107,3 +121,89 @@
                 </nav>
 
                 <!-- / Navbar -->
+
+
+<!-- Modal for Expiring Products -->
+<!-- Modal for Expiring Products -->
+<div class="modal fade" id="expiringProductsModal" tabindex="-1" aria-labelledby="expiringProductsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="expiringProductsModalLabel">Products Expiring Soon</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Products Table -->
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product Name</th>
+                            <th>Expiry Date</th>
+                            <th>Price</th>
+                            <th>Supplier</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expiring-products-list">
+                        <!-- Dynamically filled with products -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const notificationIcon = document.getElementById('notification-icon');
+        const expiringProductsList = document.getElementById('expiring-products-list');
+
+        // Pass the data from the PHP controller
+        const todayExpiringProducts = @json($todayExpiringProducts);
+        const productsExpiringSoon = @json($productsExpiringSoon);
+
+        const allExpiringProducts = [...todayExpiringProducts, ...productsExpiringSoon];
+
+        // Notification Icon Click Handler
+        notificationIcon.addEventListener('click', function() {
+            if (allExpiringProducts.length > 0) {
+                // Clear previous list items
+                expiringProductsList.innerHTML = '';
+
+                // Add rows to the table in modal
+                allExpiringProducts.forEach(function(product, index) {
+                    const productRow = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${product.name}</td>
+                            <td>${new Date(product.expire_date).toLocaleDateString()}</td>
+                            <td>${product.sell_price}</td>
+                            <td>${product.supplier_name}</td>
+                            <td>
+                                <a href="#" class="btn btn-info" onclick="redirectToProductDetails(${product.id})">View Details</a>
+                            </td>
+                        </tr>
+                    `;
+                    expiringProductsList.innerHTML += productRow;
+                });
+
+                // Show modal
+                var myModal = new bootstrap.Modal(document.getElementById('expiringProductsModal'), {
+                    keyboard: false
+                });
+                myModal.show();
+            } else {
+                alert('No products are expiring soon.');
+            }
+        });
+    });
+
+    function redirectToProductDetails(productId) {
+        // Redirect to the notifications page and pass the product ID as a query parameter
+        window.location.href = "{{ route('notifications.index') }}?product_id=" + productId;
+    }
+</script>

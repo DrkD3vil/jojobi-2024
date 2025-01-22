@@ -26,9 +26,14 @@ class Product extends Model
         'image',
         'image_gallery',
         'category_id',
+        'supplier_id',
         'stock_quantity',
+        'supplier_name',
+
         'brand',
         'product_type',
+        'manufacture_date',
+        'expire_date',
         'weight',
         'length',
         'width',
@@ -41,6 +46,11 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
     // Automatically generate UUID and SKU

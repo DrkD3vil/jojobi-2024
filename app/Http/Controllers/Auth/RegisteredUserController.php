@@ -23,33 +23,42 @@ class RegisteredUserController extends Controller
     }
 
     /**
- * Handle an incoming registration request.
- *
- * @throws \Illuminate\Validation\ValidationException
- */
-public function store(Request $request): RedirectResponse
-{
-    $validatedData = $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-        'phone' => ['required', 'string', 'regex:/^(01\d{9})$/'], // Ensure the user inputs 11 digits starting with '01'
-        'password' => ['required', 'confirmed', Rules\Password::defaults()],
-    ]);
+     * Handle an incoming registration request.
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        // Add role and status validation
+        $validatedData = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'phone' => ['required', 'string', 'regex:/^(01\d{9})$/'], // Ensure the user inputs 11 digits starting with '01'
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'string', 'in:admin,user,moderator,guest'], // Validating role
+            'status' => ['required', 'string', 'in:active,inactive,suspended,blocked,unverified,verified'], // Validating status
+        ]);
 
-    // Process the phone number to ensure the format is 880 followed by the number without extra 0s
-    $processedPhone = '880' . ltrim($validatedData['phone'], '0');
+        // Process the phone number to ensure the format is 880 followed by the number without extra 0s
+        $processedPhone = '880' . ltrim($validatedData['phone'], '0');
 
-    $user = User::create([
-        'name' => $validatedData['name'],
-        'email' => $validatedData['email'],
-        'phone' => $processedPhone,
-        'password' => Hash::make($validatedData['password']),
-    ]);
+        // Create the user including role and status
+        $user = User::create([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'phone' => $processedPhone,
+            'password' => Hash::make($validatedData['password']),
+            'role' => $validatedData['role'],  // Adding role
+            'status' => $validatedData['status'],  // Adding status
+        ]);
 
-    event(new Registered($user));
+        // Trigger the Registered event
+        event(new Registered($user));
 
-    Auth::login($user);
+        // Log the user in
+        Auth::login($user);
 
-    return redirect()->route('dashboard');
-}
+        // Redirect to the dashboard
+        return redirect()->route('dashboard');
+    }
 }

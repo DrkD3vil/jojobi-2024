@@ -12,8 +12,8 @@ class CreateCartsTable extends Migration
             $table->id();
             $table->string('cart_id')->unique();
             $table->string('uuid')->nullable();
-            $table->enum('status', ['waiting', 'pending', 'complete'])->default('waiting');
-            $table->json('items');
+            $table->enum('status', ['waiting', 'pending', 'complete', 'suspended'])->default('waiting');
+            // $table->json('items')->nullable(); // Store detailed items data
             $table->decimal('subtotal_price', 10, 2)->default(0.00);
             $table->timestamps();
         });

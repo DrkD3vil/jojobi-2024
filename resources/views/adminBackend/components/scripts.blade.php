@@ -13,6 +13,7 @@
 
     <!-- Main JS -->
     <script src="{{ asset('adminFiles/assets/js/main.js') }}"></script>
+    {{-- <script src="{{ asset('adminFiles/assets/js/apexchart.js') }}"></script> --}}
 
     <!-- Page JS -->
     <script src="{{ asset('adminFiles/assets/js/dashboards-analytics.js') }}"></script>
